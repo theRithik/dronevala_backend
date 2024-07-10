@@ -45,7 +45,7 @@ exports.ContactusMail=async(req,res)=>{
         var mailoption2 ={
             from:'AI@dronevala.com',
             to:'info@dronevala.com',
-            cc:'rithikkuvvarapu7@gmail.com',
+            cc:'vayuvegasagar@gmail.com',
             subject:`${req.body.name} New Query Request`,
             html:ml2
         }
