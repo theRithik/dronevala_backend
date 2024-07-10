@@ -44,7 +44,8 @@ exports.ContactusMail=async(req,res)=>{
         const ml2 = AdminqueryMail(dt)
         var mailoption2 ={
             from:'AI@dronevala.com',
-            to:'rithikkuvvarapu7@gmail.com',
+            to:'info@dronevala.com',
+            cc:'rithikkuvvarapu7@gmail.com',
             subject:`${req.body.name} New Query Request`,
             html:ml2
         }

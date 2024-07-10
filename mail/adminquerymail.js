@@ -70,7 +70,7 @@ function AdminqueryMail (data){
            <tbody> 
            <tr> 
            <td width="30%">
-            <img src="https://agmay.in/images/bluelogo.png" style="width: 100%;" alt="logo"/>
+            <img src="https://dronevala.com/images/logo.png" style="width: 100%;" alt="logo"/>
             </td>
             <td width="30%"></td>
             <td width="40%">
