@@ -77,7 +77,7 @@ exports.superLogin= async(req,res)=>{
             const connection = await DB.getConnection()
             const [result] = await   connection.query(`SELECT * FROM travelCharges WHERE distanceA = '${req.body.distanceA}' AND distanceB = '${req.body.distanceB}'`,)
             if(result.length>0){
-               const [result3] = await   connection.query(`UPDATE travelCharges  SET price = ${price} WHERE distanceA = '${distanceA}' AND distanceB = '${distanceB}'`)
+               const [result3] = await   connection.query(`UPDATE travelCharges  SET price = '${price}' WHERE distanceA = '${distanceA}' AND distanceB = '${distanceB}'`)
                if(result3){
                 res.status(200).send({auth:true,token:result3})
                }

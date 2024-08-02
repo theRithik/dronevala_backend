@@ -75,14 +75,13 @@ try{
             const email = decode.email
             const connection = await DB.getConnection()
             const [result] = await connection.query(`SELECT * FROM admin WHERE Institute_Email = '${email}'`)
-            connection.release()
             if(result.length<1){
                 const [result2] = await connection.query('INSERT INTO admin SET ?',user)
                 connection.release()
                 console.log(result2)
                 if(result2){
-                    const token = jwt.sign({"name":decode.name,"role":"Admin",vid:user._id,"exp":Math.floor(Date.now() / 1000) + (7*24*60*60)},process.env.VENDOR_SECRETE,{})
-                    res.status(200).send({auth:true,id:user._id,email:user.Institute_Email,name:user.Name,Instname:user.Institute_Name,token:token})
+                    const token = jwt.sign({"name":decode.name,"role":"Admin","vid":'vendor'+result2.insertId,"exp":Math.floor(Date.now() / 1000) + (7*24*60*60)},process.env.VENDOR_SECRETE,{})
+                    res.status(200).send({auth:true,id:'vendor'+result2.insertId,email:user.Institute_Email,name:user.Name,Instname:user.Institute_Name,token:token})
                 }
 
             }else{
@@ -116,14 +115,13 @@ try{
             res.status(400).send('wrong password')
         }
         else{ 
-            const token = jwt.sign({"name":result[0].Name,"role":"Admin","vid":result[0]._id,"exp":Math.floor(Date.now() / 1000) + (7*24*60*60)},process.env.VENDOR_SECRETE,{})
-          
-            res.status(200).send({auth:true,token:'Successfully Logined',data:token,id:result[0]._id,name:result[0].Name})
+            const token = jwt.sign({"name":result[0].Name,"role":"Admin","vid":'vendor'+result[0].id,"exp":Math.floor(Date.now() / 1000) + (7*24*60*60)},process.env.VENDOR_SECRETE,{})
+            res.status(200).send({auth:true,token:'Successfully Logined',data:token,id:'vendor'+result[0].id,name:result[0].Name})
         }
     }else{
         res.status(300).send('No User Found Please Login')
     }
-}catch{
+}catch(err){
     console.log(err)
     res.status(500).send('Internal Server Error')
 }
@@ -150,8 +148,8 @@ try{
         const [result2] = await connection.query('INSERT INTO admin SET ?',admin)
         connection.release()
         if(result2){
-            const token = jwt.sign({"name":data.given_name,"role":"Admin",vid:admin._id,"exp":Math.floor(Date.now() / 1000) + (7*24*60*60)},process.env.VENDOR_SECRETE,{})
-            res.status(200).send({auth:true,id:admin._id,email:admin.Institute_Email,name:admin.Name,Instname:admin.Institute_Name,token:token})
+            const token = jwt.sign({"name":data.given_name,"role":"Admin",vid:'vendor'+result2.insertId,"exp":Math.floor(Date.now() / 1000) + (7*24*60*60)},process.env.VENDOR_SECRETE,{})
+            res.status(200).send({auth:true,id:'vendor'+result2.insertId,email:admin.Institute_Email,name:admin.Name,Instname:admin.Institute_Name,token:token})
         }
 
     }else{
@@ -180,8 +178,8 @@ exports.VgooleLogin = async(req,res)=>{
                 res.status(300).send('Wrong Password')
             }
             else{
-                const token = jwt.sign({"name":result[0].Name,"role":"admin","vid":result[0]._id,"exp":Math.floor(Date.now() / 1000) + (7*24*60*60)},process.env.VENDOR_SECRETE,{})
-                res.status(200).send({auth:true,token:token,name:result[0].Name,vid:result[0]._id})
+                const token = jwt.sign({"name":result[0].Name,"role":"admin","vid":'vendor'+result[0].id,"exp":Math.floor(Date.now() / 1000) + (7*24*60*60)},process.env.VENDOR_SECRETE,{})
+                res.status(200).send({auth:true,token:token,name:result[0].Name,vid:'vendor'+result[0].id})
             }   
         }
     }catch(err){
@@ -235,7 +233,7 @@ exports.addBranch =async(req,res)=>{
        if(result){
         res.status(200).send({auth:true,data:result})
        }
-    }catch{
+    }catch(err){
  console.log(err)
         res.status(500).send('Internal Server Error') 
     }
@@ -287,6 +285,7 @@ try{
 }
 }
 
+
 exports.fullDetails=async(req,res)=>{
     try{
         const connection = await DB.getConnection()
@@ -332,7 +331,7 @@ exports.adminImage=async(req,res)=>{
         const id = req.vid
         const image = req.body.image
         const connection = await DB.getConnection()
-        const [result] = await connection.query(`UPDATE admindetails SET profile_photo = ? WHERE adminID = ${id}`,image)
+        const [result] = await connection.query(`UPDATE admindetails SET profile_photo = ? WHERE adminID = '${id}'`,image)
         connection.release()
         if(result){
             res.status(200).send({auth:true,token:'Successfully Updated'})
@@ -724,9 +723,6 @@ res.status(200).send({auth:true,data:result2})
            }
 }
     
-
-
-
     }catch(err){
         console.log(err)
         res.status(500).send('Internal Server Error')  
@@ -891,10 +887,11 @@ res.status(200).send({auth:true,data:result})
             try{
                 const id = req.vid
                 const connection = await DB.getConnection()
-                const [result] = await  connection.query(`SELECT id,bookedDates,subCategory,userName,servicePerson FROM serviceorders WHERE AdminID = ${id}`,)
-                connection.release()
+                const [result] = await  connection.query(`SELECT id,bookedDates,subCategory,userName,servicePerson FROM serviceorders WHERE AdminID = '${id}'`,)
+               
                 if(result){
-                    const [result2] = await  connection.query(`SELECT id,bookingDates,productName,userName,orderType FROM rentalorders WHERE AdminID = ${id}`,)
+                    const [result2] = await  connection.query(`SELECT id,bookingDates,productName,userName,orderType FROM rentalorders WHERE AdminID = '${id}'`,)
+                    connection.release()
                     res.status(200).send({auth:true,data:result,result:result2})
                 }
 
@@ -903,3 +900,68 @@ res.status(200).send({auth:true,data:result})
                 res.status(500).send('Internal Server Error')  
             }
         }
+
+        exports.JobPost=async(req,res)=>{
+            try{
+                const connection = await DB.getConnection()
+                const data ={
+                    jobtitle:req.body.title,
+                    adminID:req.vid,
+                    companyname:req.body.cname,
+                    jobtype:req.body.jtype,
+                    location:req.body.location,
+                    department:req.body.dtype,
+                    salaryrange:req.body.salary,
+                    jobdescription:req.body.description,
+                    RequiredQualifications:req.body.rqualification,
+                    preferredQualifications:req.body.pqualification,
+                    keyResponsibilities:req.body.responsibilities,
+                    benefits:req.body.benefits,
+                    lastdate:req.body.ldate,
+                    companyDescription:req.body.cdescription,
+                    email:req.body.email,
+                    phone:req.body.phone,
+                    status:'Active',
+                    date:new Date().toLocaleDateString('en-GB',{timeZone:'IST'})
+                }
+                const [result]= await connection.query('INSERT INTO jobs SET ?',[data])
+                connection.release()
+                if(result){
+                    res.status(200).send('Successfully Posted')
+                }
+
+            }catch(err){
+                console.log(err)
+                res.status(500).send('Internal Server Error')  
+            }
+        }
+
+        exports.titleName=async(req,res)=>{
+            try{
+                const connection = await DB.getConnection()
+                const [result] = await connection.query(`SELECT id,jobtitle FROM jobs WHERE adminID='${req.vid}'`)
+                if(result){
+                    res.status(200).send(result)
+                }
+
+            }catch(err){
+                console.log(err)
+                res.status(500).send('Internal Server Error')  
+            }
+        }
+
+        exports.jobstatus=async(req,res)=>{
+            try{
+                const connection = await DB.getConnection()
+                const data = req.body.status
+                const [result] = await connection.query(`UPDATE jobs SET status = ? WHERE id = '${req.body.id}'`,[data])
+                if(result){
+                    res.status(200).send(result)
+                }
+
+            }catch(err){
+                console.log(err)
+                res.status(500).send('Internal Server Error')  
+            }
+        }
+        

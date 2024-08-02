@@ -5,6 +5,8 @@ const RegisterMail = require('../mail/register')
 const nodemailer = require('nodemailer')
 const querymail = require('../mail/querymail')
 const AdminqueryMail = require('../mail/adminquerymail')
+const careersMail = require('../mail/CareersMail')
+const careersAcknowlegmentMail = require('../mail/careerAcknowledgement')
 
 var transport2 = nodemailer.createTransport({
     host:'smtp.hostinger.com',
@@ -86,8 +88,8 @@ exports.UserLogin= async(req,res)=>{
                     res.status(300).send('You have enterd the wrong password')
                 }
                 else{
-                    const token = jwt.sign({"name":result[0].name,"role":"user","id":result[0].uniqID,"exp":Math.floor(Date.now() / 1000) + (30*24*60*60)},process.env.USER_SECRETE,{})
-                    res.status(200).send({auth:true,token:token,uniq:result[0].uniqID,name:result[0].name})
+                    const token = jwt.sign({"name":result[0].name,"role":"user","id":'DV'+result[0].id,"exp":Math.floor(Date.now() / 1000) + (30*24*60*60)},process.env.USER_SECRETE,{})
+                    res.status(200).send({auth:true,token:token,uniq:'DV'+result[0].id,name:result[0].name})
                 }
             }else{
                 res.status(300).send('No user Found please register first')
@@ -166,7 +168,7 @@ exports.UserLogin= async(req,res)=>{
                             status:'Active',
                             DateCreated:data.date_Created
                         }
-                        const token = jwt.sign({"name":decode.name,id:data2.uniqID,"role":"user"},process.env.USER_SECRETE,{})
+                        const token = jwt.sign({"name":decode.name,id:data2.uniqID,"role":"user","exp":Math.floor(Date.now() / 1000) + (30*24*60*60)},process.env.USER_SECRETE,{})
 const [result3] =  await connection.query('INSERT INTO userDetails SET ?',data2) 
 connection.release()
 if(result3){
@@ -199,8 +201,8 @@ exports.googleLogin= async(req,res)=>{
                 res.status(400).send('Wrong Password')
             }
             else{
-                const token = jwt.sign({"name":data.name,"role":"user","id":result[0].uniqID,"exp":Math.floor(Date.now() / 1000) + (30*24*60*60)},process.env.USER_SECRETE,{})
-                res.status(200).send({auth:true,token:token,name:result[0].name,uniq:result[0].uniqID})
+                const token = jwt.sign({"name":data.name,"role":"user","id":'DV'+result[0].id,"exp":Math.floor(Date.now() / 1000) + (30*24*60*60)},process.env.USER_SECRETE,{})
+                res.status(200).send({auth:true,token:token,name:result[0].name,uniq:'DV'+result[0].id})
             }
         }else{
             res.status(300).send('No user Found Please Sign Up first')
@@ -238,7 +240,7 @@ if(result2){
         firstName:user.name,
         role:'user',
         DateCreated:user.date_Created,
-        profilePhoto:data.picture,
+
         status:'Active'
     }
   const [result3] = await connection.query('INSERT INTO userDetails SET ?',data2,)
@@ -608,7 +610,7 @@ exports.CourseOrderIntiated=async(req,res)=>{
 exports.courseOrderDetails=async(req,res)=>{
     try{
         const connection = await DB.getConnection()
-        const [result] = await connection.query(`SELECT id,courseName,instituteName,DateandTime FROM courseorders WHERE userID = ${req.id}`)
+        const [result] = await connection.query(`SELECT id,courseName,instituteName,DateandTime FROM courseorders WHERE userID = '${req.id}'`)
         connection.release()
         if(result){
             res.status(200).send({auth:true,data:result})
@@ -623,7 +625,7 @@ exports.courseOrderDetails=async(req,res)=>{
 exports.serviceOrderDetails=async(req,res)=>{
     try{
         const connection = await DB.getConnection()
-        const [result] = await connection.query(`SELECT id,servicePerson,subCategory,DateandTime FROM serviceorders WHERE userID  = ${req.id}`)
+        const [result] = await connection.query(`SELECT id,servicePerson,subCategory,DateandTime FROM serviceorders WHERE userID  = '${req.id}'`)
         connection.release()
         if(result){
             res.status(200).send({auth:true,data:result})
@@ -638,7 +640,7 @@ exports.serviceOrderDetails=async(req,res)=>{
 exports.rentalOrderDetails=async(req,res)=>{
     try{
         const connection = await DB.getConnection()
-        const [result] = await  connection.query(`SELECT id,productName,companyName,DateandTime FROM rentalorders WHERE userID = ${req.id}`)
+        const [result] = await  connection.query(`SELECT id,productName,companyName,DateandTime FROM rentalorders WHERE userID = '${req.id}'`)
         connection.release()
         if(result){
             res.status(200).send({auth:true,data:result})
@@ -652,7 +654,7 @@ exports.rentalOrderDetails=async(req,res)=>{
 exports.storeOrderDetails=async(req,res)=>{
     try{
         const connection = await DB.getConnection()
-        const [result] = await connection.query(`SELECT id,productName,brand,DateandTime FROM storeorders WHERE userID = ${req.id}`)
+        const [result] = await connection.query(`SELECT id,productName,brand,DateandTime FROM storeorders WHERE userID = '${req.id}'`)
         connection.release()
         if(result){
             res.status(200).send({auth:true,data:result})
@@ -668,7 +670,7 @@ exports.courseorderFullDetails=async(req,res)=>{
     try{
         const id = req.body.id
         const connection = await DB.getConnection()
-        const [result] = await connection.query(`SELECT * FROM courseorders WHERE id ='${id}' AND userID =${req.id}`)
+        const [result] = await connection.query(`SELECT * FROM courseorders WHERE id ='${id}' AND userID ='${req.id}'`)
         connection.release()
         if(result){
             res.status(200).send({auth:true,data:result})
@@ -683,7 +685,7 @@ exports.serviceorderFullDetails=async(req,res)=>{
     try{
         const id = req.body.id
         const connection = await DB.getConnection()
-        const [result] = await connection.query(`SELECT * FROM serviceorders WHERE id ='${id}' AND userID =${req.id}`)
+        const [result] = await connection.query(`SELECT * FROM serviceorders WHERE id ='${id}' AND userID ='${req.id}'`)
         connection.release()
         if(result){
             res.status(200).send({auth:true,data:result})
@@ -697,7 +699,7 @@ exports.rentalorderFullDetails=async(req,res)=>{
     try{
         const id = req.body.id
         const connection = await DB.getConnection()
-        const [result] = await connection.query(`SELECT * FROM rentalorders WHERE id ='${id}' AND userID =${req.id}`)
+        const [result] = await connection.query(`SELECT * FROM rentalorders WHERE id ='${id}' AND userID ='${req.id}'`)
         connection.release()
         if(result){
             res.status(200).send({auth:true,data:result})
@@ -711,7 +713,7 @@ exports.storeorderFullDetails=async(req,res)=>{
     try{
         const id = req.body.id
         const connection = await DB.getConnection()
-        const [result] = await connection.query(`SELECT * FROM storeorders WHERE id ='${id}' AND userID =${req.id}`)
+        const [result] = await connection.query(`SELECT * FROM storeorders WHERE id ='${id}' AND userID ='${req.id}'`)
       connection.release()
         if(result){
             res.status(200).send({auth:true,data:result})
@@ -725,10 +727,10 @@ exports.storeorderFullDetails=async(req,res)=>{
 exports.UserReviews=async(req,res)=>{
     try{
         const connection = await DB.getConnection()
-        const [result] = await  connection.query(`SELECT id,courseName,DateandTime,instituteName,rating,type,id,institute_Id,courseID,message FROM courseorders WHERE userID = ${req.id} `)
-   const [result2] = await  connection.query(`SELECT id,servicePerson,DateandTime,subCategory,rating,type,id,AdminID,serviceID,message FROM serviceorders WHERE userID = ${req.id}`)
-            const [result3] = await  connection.query(`SELECT id,productName,DateandTime,companyName,rating,type,id,adminId,rentalID,message FROM rentalorders WHERE userID =${req.id}`)
-          const [result4] = await  connection.query(`SELECT id,productName,DateandTime,brand,seller,rating,type,id,adminID,productID,message FROM storeorders WHERE userID =${req.id}`)
+        const [result] = await  connection.query(`SELECT id,courseName,DateandTime,instituteName,rating,type,id,institute_Id,courseID,message FROM courseorders WHERE userID = '${req.id}' `)
+   const [result2] = await  connection.query(`SELECT id,servicePerson,DateandTime,subCategory,rating,type,id,AdminID,serviceID,message FROM serviceorders WHERE userID = '${req.id}'`)
+            const [result3] = await  connection.query(`SELECT id,productName,DateandTime,companyName,rating,type,id,adminId,rentalID,message FROM rentalorders WHERE userID ='${req.id}'`)
+          const [result4] = await  connection.query(`SELECT id,productName,DateandTime,brand,seller,rating,type,id,adminID,productID,message FROM storeorders WHERE userID ='${req.id}'`)
           connection.release()
           res.status(200).send({data1:result,data2:result2,data3:result3,data4:result4})
 
@@ -741,7 +743,7 @@ exports.UserReviews=async(req,res)=>{
 exports.UserName=async(req,res)=>{
     try{
         const connection = await DB.getConnection()
-        const [result] = await  connection.query(`SELECT id,firstName,middleName,lastName FROM userDetails WHERE uniqID =${req.id}`)
+        const [result] = await  connection.query(`SELECT id,firstName,middleName,lastName FROM userDetails WHERE uniqID ='${req.id}'`)
         connection.release()
         if(result){
             res.status(200).send({auth:true,result:result})
@@ -799,7 +801,7 @@ if(result3){
 exports.profilePhoto=async(req,res)=>{
     try{
         const connection = await DB.getConnection()
-        const [result] = await connection.query(`SELECT profilePhoto FROM userDetails WHERE uniqID =${req.id}`)
+        const [result] = await connection.query(`SELECT profilePhoto FROM userDetails WHERE uniqID ='${req.id}'`)
         connection.release()
         if(result){
             res.status(200).send({auth:true,data:result})
@@ -813,7 +815,7 @@ exports.profilePhoto=async(req,res)=>{
 exports.GetUserDetails=async(req,res)=>{
     try{
         const connection = await DB.getConnection()
-        const [result] = await   connection.query(`SELECT * FROM userDetails WHERE uniqID = ${req.id}`)
+        const [result] = await   connection.query(`SELECT * FROM userDetails WHERE uniqID = '${req.id}'`)
         connection.release()
         if(result){
             res.status(200).send({auth:true,data:result})
@@ -856,7 +858,7 @@ exports.UpdateProfile=async(req,res)=>{
 exports.AddprofilePhoto=async(req,res)=>{
     try{
         const connection = await DB.getConnection()
-        const [result] = await connection.query(`UPDATE userDetails SET profilePhoto = ? WHERE uniqID =${req.id}`,[req.body.image])
+        const [result] = await connection.query(`UPDATE userDetails SET profilePhoto = ? WHERE uniqID ='${req.id}'`,[req.body.image])
         connection.release()
         if(result){
             res.status(200).send({auth:true,data:result})
@@ -864,5 +866,107 @@ exports.AddprofilePhoto=async(req,res)=>{
     }catch(err){
         console.log(err)
         res.status(500).send('Internal Server Error')  
+    }
+}
+
+exports.getJobs=async(req,res)=>{
+    try{
+        const connection = await DB.getConnection()
+        const [result] = await connection.query('SELECT jobtitle,companyName,id,jobtype,department,location FROM jobs WHERE status ="Active"')
+        connection.release()
+        if(result){
+            res.status(200).send(result)
+        }
+    }catch(err){
+        console.log(err)
+        res.status(500).send('Internal Server Error')  
+    }
+}
+
+
+exports.jobDetails=async(req,res)=>{
+    try{
+        const connection = await DB.getConnection()
+        console.log(req.body)
+        const [result] = await connection.query(`SELECT * FROM jobs WHERE id = '${req.body.id}'`)
+        connection.release()
+        if(result){
+            res.status(200).send(result)
+        }
+
+    }catch(err){
+        console.log(err)
+        res.status(500).send('Internal Server Error')  
+    }
+}
+
+
+exports.applyJob=async(req,res)=>{
+    try{
+const dt = req.files
+const {name,email,number,position,vemail,companyname} = req.body
+const resume = dt.file
+
+// fs.writeFileSync(resumtpath,resume.data,(err)=>{
+//     if(err){
+//         console.error('Error saving resume:', err);
+//         return res.status(500).send('Error saving ');
+//     }
+    const detail = {
+        name:name,
+        email:email,
+        number:number,
+        position:position,
+        resumename:resume,
+        companyname:companyname,
+        resumepath:resume.data
+    }
+    const careers = await careersMail(detail)
+    var mailoption ={
+        from:'ai@dronevala.com',
+        to:vemail,
+        subject:`${name} applied for the position`,
+        html:careers,
+        attachments: [
+            {
+              filename: resume.name,
+              content: resume.data,
+            },
+        ]
+    
+    }
+    
+    transport3.sendMail(mailoption,async(err,result)=>{
+        if(err){
+          console.log('Error Sending mail',err)
+        }else{
+  
+    
+    const usermail = await careersAcknowlegmentMail(detail)
+    
+     var mailoption2 ={
+        from:'Dronevala AI, <ai@dronevala.com>',
+        to:`${email}`,
+        subject:`Acknowledgement of Your Job Application`,
+        html:usermail
+     }
+     
+    transport3.sendMail(mailoption2,(err,result)=>{
+        if(err){
+          console.log('Error Sending mail')
+        }else{
+            console.log('Mail 2 sent Successfully')
+             res.status(200).send('Application Submitted Successfully');
+        }
+    })
+    }
+})
+    
+// })
+
+    }
+    catch(err){
+        console.log(err)
+        res.status(500).send('Internal server Error');
     }
 }
